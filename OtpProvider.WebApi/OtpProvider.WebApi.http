@@ -1,0 +1,6 @@
+@OtpProvider.WebApi_HostAddress = http://localhost:5169
+
+GET {{OtpProvider.WebApi_HostAddress}}/api/otp
+Accept: application/json
+
+###
