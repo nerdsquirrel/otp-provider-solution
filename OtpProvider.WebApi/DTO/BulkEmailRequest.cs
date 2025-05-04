@@ -14,5 +14,9 @@ namespace WebApi.Practice.DTO
 
         [Required]
         public string Body { get; init; } = string.Empty;
+
+        [Required]
+        public string Provider { get; init; } = string.Empty; // NEW: to choose between SendGrid, Gmail, etc.
     }
+
 }

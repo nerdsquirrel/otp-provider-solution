@@ -34,10 +34,12 @@ namespace WebApi.Practice.Controllers
         }
 
         [HttpPost("bulk")]
+
+       
         public IActionResult SendBulkEmail([FromBody] BulkEmailRequest request)
         {
-            //To-Do [Task]: Take the provider name from the request and use it to get the email service.
-            var emailService = _emailFactory.GetEmailService();
+            // ✅ Use the provider name from the request
+            var emailService = _emailFactory.GetEmailService(request.Provider);
 
             if (emailService is IBulkEmailService bulkSender)
             {
@@ -47,5 +49,7 @@ namespace WebApi.Practice.Controllers
 
             return BadRequest("Bulk email not supported by the current provider.");
         }
+
+
     }
 }

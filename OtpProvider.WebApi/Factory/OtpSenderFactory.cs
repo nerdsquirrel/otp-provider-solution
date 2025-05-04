@@ -1,4 +1,5 @@
 ﻿using OtpProvider.WebApi.OtpSender;
+using WebApi.Practice.Model;
 
 namespace WebApi.Practice.Factory
 {
@@ -13,12 +14,12 @@ namespace WebApi.Practice.Factory
             _emailFactory = emailFactory;
         }
 
-        public IOtpSender GetSender(string method)
+        public IOtpSender GetSender(OtpMethod method)
         {
-            return method.ToLower() switch
+            return method switch
             {
-                "sms" => _provider.GetRequiredService<SmsOtpSender>(),
-                "email" => new EmailOtpSender(_emailFactory.GetEmailService()),
+                OtpMethod.Sms => _provider.GetRequiredService<SmsOtpSender>(),
+                OtpMethod.Email => new EmailOtpSender(_emailFactory.GetEmailService()),
                 _ => throw new Exception("Invalid OTP method")
             };
         }
