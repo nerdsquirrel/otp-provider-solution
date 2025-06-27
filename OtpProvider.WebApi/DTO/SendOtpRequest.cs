@@ -14,9 +14,9 @@ namespace WebApi.Practice.Model
         public OtpMethod Method { get; set; }
 
         [Required]
-        public string To { get; set; }
+        public required string To { get; set; }
 
         [Required]
-        public string Otp { get; set; }
+        public required string Otp { get; set; }
     }
 }

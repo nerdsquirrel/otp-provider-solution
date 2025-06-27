@@ -2,8 +2,8 @@
 {
     public class GmailSetting
     {
-        public string FromAddress { get; set; }
-        public string FromName { get; set; }
-        public string AppPassword { get; set; }
+        public required string FromAddress { get; set; }
+        public required string FromName { get; set; }
+        public required string AppPassword { get; set; }
     }
 }

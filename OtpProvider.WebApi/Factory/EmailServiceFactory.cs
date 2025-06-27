@@ -1,18 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
-using WebApi.Practice.Services;
+﻿using WebApi.Practice.Services;
 
 namespace WebApi.Practice.Factory
 {
     public class EmailServiceFactory
     {
         private readonly IServiceProvider _provider;
-        private readonly string _defaultProvider;
+        private readonly string _defaultProviderName;
 
         public EmailServiceFactory(IServiceProvider provider, IConfiguration config)
         {
             _provider = provider;
-            // read the default from appsettings.json: "EmailProvider": "Gmail" or "SendGrid"
-            _defaultProvider = config["EmailProvider"] ?? "sendgrid";
+            _defaultProviderName = config["EmailProvider"] ?? "gmail";
         }
 
         public IEmailService GetEmailService(string providerName)
@@ -26,7 +24,7 @@ namespace WebApi.Practice.Factory
         }
 
         // Now uses the configured default instead of hard‐coded "sendgrid"
-        public IEmailService GetEmailService()
-            => GetEmailService(_defaultProvider);
+        public IEmailService GetDefaultEmailService()
+            => GetEmailService(_defaultProviderName);
     }
 }
