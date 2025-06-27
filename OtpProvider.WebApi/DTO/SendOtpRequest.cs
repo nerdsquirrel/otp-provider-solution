@@ -2,11 +2,16 @@
 
 namespace WebApi.Practice.Model
 {
+    public enum OtpMethod
+    {
+        Sms,
+        Email
+    }
     public class SendOtpRequest
     {
         // TODO [Task]: Convert to Enum for better validation.
         [Required]
-        public string Method { get; set; }
+        public OtpMethod Method { get; set; }
 
         [Required]
         public string To { get; set; }
