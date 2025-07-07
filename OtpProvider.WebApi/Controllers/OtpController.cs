@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.Practice.DTO;
 using WebApi.Practice.Factory;
 using WebApi.Practice.Model;
@@ -26,6 +27,7 @@ namespace WebApi.Practice.Controllers
         }
 
         [HttpPost("send")]
+        [Authorize(Roles ="User")]
         public IActionResult Send([FromBody] SendOtpRequest request)
         {
             var sender = _factory.GetSender(request.Method);
@@ -34,8 +36,7 @@ namespace WebApi.Practice.Controllers
         }
 
         [HttpPost("bulk")]
-
-       
+        [Authorize(Roles = "Admin")]
         public IActionResult SendBulkEmail([FromBody] BulkEmailRequest request)
         {
             var emailService = _emailFactory.GetEmailService(request.Provider);
