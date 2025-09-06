@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - OTP Provider</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Dashboard</h2>
+        <p id="welcome"></p>
+
+        <div class="dashboard-content">
+            <p>This is a protected page. In the future, OTP management features will appear here.</p>
+        </div>
+
+        <button id="logoutBtn">Logout</button>
+    </div>
+
+    <script>
+        // Check if token exists
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "login.html";
+        } else {
+            // Optionally decode JWT to extract username/email
+            // For now, just show message
+            $("#welcome").text("Welcome! You are logged in.");
+        }
+
+        // Logout clears token and redirects
+        $("#logoutBtn").click(function () {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+        });
+    </script>
+</body>
+</html>

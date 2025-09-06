@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OtpProvider.WebApi.Config;
@@ -47,11 +46,22 @@ namespace OtpProvider.WebApi.Controllers
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.TokenExpirationMinutes > 0 ? _jwtSettings.TokenExpirationMinutes : 30),
                 signingCredentials: creds
             );
             return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
         }
 
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterAsync([FromBody] RegisterDto dto)
+        {
+            var result = await _authService.RegisterAsync(dto);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return StatusCode(StatusCodes.Status201Created);
+        }
     }
 }
