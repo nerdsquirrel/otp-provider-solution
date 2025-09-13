@@ -68,6 +68,17 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+    {
+        policy.WithOrigins("http://localhost:53017")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // keep if you plan to use cookies; fine for Authorization header too
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -78,11 +89,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+app.UseCors("FrontendDev");
 app.UseAuthentication();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+var defaultFileOptions = new DefaultFilesOptions();
+defaultFileOptions.DefaultFileNames.Clear();
+defaultFileOptions.DefaultFileNames.Add("index.html"); // your desired startup file (must be in wwwroot)
+app.UseDefaultFiles(defaultFileOptions);
 
 app.UseAuthorization();
 app.MapControllers();
