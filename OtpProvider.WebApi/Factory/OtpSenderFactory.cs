@@ -1,5 +1,5 @@
-﻿using OtpProvider.WebApi.OtpSender;
-using WebApi.Practice.Model;
+﻿using OtpProvider.WebApi.Entities;
+using OtpProvider.WebApi.OtpSender;
 
 namespace WebApi.Practice.Factory
 {

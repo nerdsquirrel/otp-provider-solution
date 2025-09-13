@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OtpProvider.WebApi.Entities;
 
 namespace OtpProvider.WebApi.Data
 {
@@ -8,15 +9,19 @@ namespace OtpProvider.WebApi.Data
         {
         }
 
-        public DbSet<Entities.ApplicationUser> Users { get; set; }
-        public DbSet<Entities.ApplicationRole> Roles { get; set; }
-        public DbSet<Entities.ApplicationUserRoles> UserRoles { get; set; }
+        public DbSet<ApplicationUser> Users { get; set; }
+        public DbSet<ApplicationRole> Roles { get; set; }
+        public DbSet<ApplicationUserRoles> UserRoles { get; set; }
+        public DbSet<Entities.OtpProvider> OtpProviders { get; set; }
+        public DbSet<OtpRequest> OtpRequests { get; set; }
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Entities.ApplicationUser>(entity =>
+            modelBuilder.Entity<ApplicationUser>(entity =>
             {
                 entity.Property(u => u.UserName)
                       .IsRequired()
@@ -33,7 +38,7 @@ namespace OtpProvider.WebApi.Data
             });
 
             // Roles
-            modelBuilder.Entity<Entities.ApplicationRole>(entity =>
+            modelBuilder.Entity<ApplicationRole>(entity =>
             {
                 entity.Property(r => r.Name)
                       .IsRequired()
@@ -44,7 +49,7 @@ namespace OtpProvider.WebApi.Data
             });
 
             // UserRoles (join table)
-            modelBuilder.Entity<Entities.ApplicationUserRoles>(entity =>
+            modelBuilder.Entity<ApplicationUserRoles>(entity =>
             {
                 // Composite PK prevents duplicate (UserId, RoleId) pairs
                 entity.HasKey(ur => new { ur.UserId, ur.RoleId });
@@ -58,6 +63,63 @@ namespace OtpProvider.WebApi.Data
                 entity.HasOne(ur => ur.Role)
                       .WithMany(r => r.UserRoles)
                       .HasForeignKey(ur => ur.RoleId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // OtpProvider
+            modelBuilder.Entity<Entities.OtpProvider>(entity =>
+            {
+                entity.Property(p => p.Name)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(p => p.Description)
+                      .HasMaxLength(512);
+
+                entity.Property(p => p.ConfigurationJson)
+                      .HasMaxLength(2048);
+
+                entity.HasIndex(p => p.Name)
+                      .IsUnique();
+            });
+
+            // OtpRequest
+            modelBuilder.Entity<OtpRequest>(entity =>
+            {
+                entity.Property(r => r.SentTo)
+                      .IsRequired()
+                      .HasMaxLength(256);
+
+                entity.Property(r => r.OtpHashed)
+                      .IsRequired()
+                      .HasMaxLength(256);
+
+                entity.HasIndex(r => r.RequestId)
+                      .IsUnique();
+
+                entity.HasIndex(r => new { r.RequestId, r.OtpHashed });
+
+                entity.HasOne(r => r.OtpProvider)
+                      .WithMany(p => p.OtpRequests)
+                      .HasForeignKey(r => r.OtpProviderId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.SendByUser)
+                      .WithMany()
+                      .HasForeignKey(r => r.SendByUserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // OtpVerification
+            modelBuilder.Entity<OtpVerification>(entity =>
+            {
+                entity.Property(v => v.ProvidedOtpHashed)
+                      .IsRequired()
+                      .HasMaxLength(256);
+
+                entity.HasOne(v => v.OtpRequest)
+                      .WithMany(r => r.OtpVerifications)
+                      .HasForeignKey(v => v.OtpRequestId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }
