@@ -24,6 +24,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register OTP senders
 builder.Services.AddScoped<SmsOtpSender>();
+builder.Services.AddScoped<WhatsAppOtpSender>();
 builder.Services.AddScoped<AuthService>();
 
 // Register email services as concrete types for the factory
