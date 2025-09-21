@@ -4,6 +4,8 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SendOtpPage from './pages/SendOtpPage';
+import OtpProvidersPage from './pages/OtpProvidersPage';
+import VerifyOtpPage from './pages/VerifyOtpPage';
 
 export default function App() {
     return (
@@ -19,6 +21,17 @@ export default function App() {
             <Route path="/send-otp" element={
                 <ProtectedRoute>
                     <SendOtpPage />
+                </ProtectedRoute>
+            } />
+            <Route path="/verify-otp" element={
+                <ProtectedRoute>
+                    <VerifyOtpPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/otp-providers" element={
+                <ProtectedRoute>
+                    <OtpProvidersPage />
                 </ProtectedRoute>
             } />
             <Route path="*" element={<h3 style={{ padding: 24 }}>Not Found</h3>} />

@@ -1,10 +1,95 @@
-﻿namespace OtpProvider.WebApi.OtpSender
+﻿using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+
+namespace OtpProvider.WebApi.OtpSender
 {
+    /// <summary>
+    /// Sends OTP via external SMS HTTP API.
+    /// </summary>
     public class SmsOtpSender : IOtpSender
     {
+        private const string BaseUrl = "https://api.sms.net.bd/sendsms";
+        private readonly string _apiKey;
+
+        private static readonly HttpClient _httpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
+
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        public SmsOtpSender()
+        {
+            _apiKey = Environment.GetEnvironmentVariable("SMS_API_KEY")
+                      ?? "api-key";
+        }
+
         public void SendOtp(string destination, string message)
         {
-            Console.WriteLine($"[SMS] OTP sent to {destination}: {message}");
+            if (string.IsNullOrWhiteSpace(destination))
+                throw new ArgumentException("Destination phone number required.", nameof(destination));
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ArgumentException("Message required.", nameof(message));
+
+            var query = $"?api_key={UrlEncoder.Default.Encode(_apiKey)}" +
+                        $"&msg={UrlEncoder.Default.Encode(message)}" +
+                        $"&to={UrlEncoder.Default.Encode(destination)}";
+
+            var requestUri = BaseUrl + query;
+
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+                request.Headers.Accept.Clear();
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                using var response = _httpClient.Send(request);
+                var contentString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[SMS] HTTP {(int)response.StatusCode} failure. Body: {contentString}");
+                    return;
+                }
+
+                SmsSendResponse? smsResp = null;
+                try
+                {
+                    smsResp = JsonSerializer.Deserialize<SmsSendResponse>(contentString, _jsonOptions);
+                }
+                catch (Exception deserEx)
+                {
+                    Console.WriteLine($"[SMS] Deserialize error: {deserEx.Message}. Raw: {contentString}");
+                }
+
+                if (smsResp is null)
+                {
+                    Console.WriteLine("[SMS] Null/invalid response object.");
+                    return;
+                }
+
+                if (smsResp.IsSuccess)
+                {
+                    Console.WriteLine($"[SMS] Success: {smsResp.Msg} (Balance: {smsResp.Data?.Balance ?? "N/A"})");
+                }
+                else
+                {
+                    Console.WriteLine($"[SMS] Failed (error={smsResp.Error}): {smsResp.Msg}");
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                Console.WriteLine("[SMS] Request timed out.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SMS] Unexpected error: {ex.Message}");
+            }
         }
     }
 }

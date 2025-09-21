@@ -1,30 +1,33 @@
 import { useState } from 'react';
-import { sendOtp } from '../api/authApi';
-import { useNavigate } from 'react-router-dom';
+import { sendOtp } from '../api/otpApi';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function SendOtpPage() {
     const [method, setMethod] = useState('Sms');
     const [to, setTo] = useState('');
-    const [otp, setOtp] = useState('');
+    const [purpose, setPurpose] = useState('');
     const [status, setStatus] = useState({ loading: false, error: '', ok: '' });
+    const [result, setResult] = useState(null);
     const navigate = useNavigate();
-
-    function generateOtp(length = 6) {
-        // Simple numeric OTP generator
-        const v = Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
-        setOtp(v);
-    }
 
     async function handleSubmit(e) {
         e.preventDefault();
         setStatus({ loading: true, error: '', ok: '' });
+        setResult(null);
+
+        if (!method || !to) {
+            setStatus(s => ({ ...s, loading: false, error: 'Method and destination are required.' }));
+            return;
+        }
+
         try {
-            if (!method || !to || !otp) {
-                setStatus(s => ({ ...s, loading: false, error: 'All fields are required.' }));
-                return;
+            const data = await sendOtp({ method, to, purpose });
+            if (data.isSent) {
+                setStatus({ loading: false, error: '', ok: 'OTP dispatch requested successfully.' });
+            } else {
+                setStatus({ loading: false, error: data.errorMessage || 'Failed to send OTP.', ok: '' });
             }
-            await sendOtp({ method, to, otp });
-            setStatus({ loading: false, error: '', ok: 'OTP sent successfully.' });
+            setResult(data);
         } catch (err) {
             const msg = err?.response?.data || err.message || 'Failed to send OTP';
             setStatus({ loading: false, error: msg, ok: '' });
@@ -32,12 +35,16 @@ export default function SendOtpPage() {
     }
 
     return (
-        <div style={{ maxWidth: 520, margin: '40px auto', padding: 24, border: '1px solid #ddd', borderRadius: 8 }}>
+        <div style={{ maxWidth: 560, margin: '40px auto', padding: 24, border: '1px solid #ddd', borderRadius: 8 }}>
             <h2 style={{ marginTop: 0 }}>Send OTP</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <label>
                     Method
-                    <select value={method} onChange={e => setMethod(e.target.value)} style={{ display: 'block', marginTop: 4 }}>
+                    <select
+                        value={method}
+                        onChange={e => setMethod(e.target.value)}
+                        style={{ display: 'block', marginTop: 4 }}
+                    >
                         <option value="Sms">SMS</option>
                         <option value="Email">Email</option>
                     </select>
@@ -55,17 +62,14 @@ export default function SendOtpPage() {
                 </label>
 
                 <label>
-                    OTP
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                        <input
-                            type="text"
-                            value={otp}
-                            onChange={e => setOtp(e.target.value)}
-                            placeholder="e.g. 842193"
-                            style={{ flex: 1 }}
-                        />
-                        <button type="button" onClick={() => generateOtp(6)}>Generate</button>
-                    </div>
+                    Purpose (optional)
+                    <input
+                        type="text"
+                        value={purpose}
+                        onChange={e => setPurpose(e.target.value)}
+                        placeholder="e.g. Login, Password Reset"
+                        style={{ width: '100%', marginTop: 4 }}
+                    />
                 </label>
 
                 <div style={{ display: 'flex', gap: 12 }}>
@@ -79,9 +83,35 @@ export default function SendOtpPage() {
                 {status.ok && <div style={{ color: 'green' }}>{status.ok}</div>}
             </form>
 
+            {result && (
+                <div style={{
+                    marginTop: 24,
+                    background: '#fafafa',
+                    border: '1px solid #eee',
+                    padding: 16,
+                    borderRadius: 6,
+                    fontSize: 14
+                }}>
+                    <strong>Server Response</strong>
+                    <div>Request Id: <code>{result.requestId}</code></div>
+                    <div>Expires In: {result.otpExpirySeconds} seconds</div>
+                    <div>Status: {result.isSent ? 'Sent' : 'Failed'}</div>
+                    {result.errorMessage && <div style={{ color: 'crimson' }}>Error: {result.errorMessage}</div>}
+                    {result.isSent && (
+                        <div style={{ marginTop: 12 }}>
+                            <Link
+                                to={`/verify-otp?requestId=${encodeURIComponent(result.requestId)}`}
+                                style={{ fontSize: 13 }}
+                            >
+                                Verify this OTP
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            )}
+
             <p style={{ fontSize: 12, color: '#555', marginTop: 24 }}>
-                Note: Client-side OTP generation is for demo only. For higher security you can
-                generate OTP on the server and only send the destination + method from the client.
+                The server generates and dispatches the OTP. Enter it on the verification page once received.
             </p>
         </div>
     );

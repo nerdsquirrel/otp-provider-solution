@@ -8,10 +8,3 @@ export async function login({ username, password }) {
 export async function registerUser({ username, email, password }) {
     await http.post('/api/auth/register', { username, email, password });
 }
-
-export async function sendOtp({ method, to, otp }) {
-    // method: 'Sms' | 'Email'
-    const payload = { method, to, otp };
-    const res = await http.post('/api/otp/send', payload);
-    return res.data;
-}
