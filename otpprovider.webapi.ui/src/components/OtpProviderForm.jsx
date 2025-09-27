@@ -8,24 +8,30 @@ import { useForm } from 'react-hook-form';
 const defaultValues = {
     name: '',
     description: '',
-    deliveryType: 'Sms',
+    deliveryType: '',
     isActive: true,
     configurationJson: ''
 };
 
-export default function OtpProviderForm({ initial, onSubmit, onCancel, submitting }) {
+export default function OtpProviderForm({ initial, onSubmit, onCancel, submitting, deliveryTypeOptions = [] }) {
     const { register, handleSubmit, reset, formState: { errors }, setError, watch } =
         useForm({ defaultValues });
+
+    // Determine a safe default delivery type
+    const firstOption = deliveryTypeOptions.length ? deliveryTypeOptions[0].value : '';
 
     useEffect(() => {
         reset(initial ? {
             name: initial.name ?? '',
             description: initial.description ?? '',
-            deliveryType: initial.deliveryType ?? 'Sms',
+            deliveryType: initial.deliveryType ?? firstOption,
             isActive: initial.isActive ?? true,
             configurationJson: initial.configurationJson ?? ''
-        } : defaultValues);
-    }, [initial, reset]);
+        } : {
+            ...defaultValues,
+            deliveryType: firstOption
+        });
+    }, [initial, reset, firstOption, deliveryTypeOptions]);
 
     const validateJson = (v) => {
         if (!v || !v.trim()) return true;
@@ -69,12 +75,14 @@ export default function OtpProviderForm({ initial, onSubmit, onCancel, submittin
                     select
                     size="small"
                     fullWidth
+                    disabled={!deliveryTypeOptions.length}
                     error={!!errors.deliveryType}
-                    helperText={errors.deliveryType?.message}
+                    helperText={errors.deliveryType?.message || (!deliveryTypeOptions.length ? 'Loading options...' : '')}
                     {...register('deliveryType', { required: 'Required' })}
                 >
-                    <MenuItem value="Sms">Sms</MenuItem>
-                    <MenuItem value="Email">Email</MenuItem>
+                    {deliveryTypeOptions.map(o => (
+                        <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                    ))}
                 </TextField>
 
                 <FormControlLabel
@@ -98,7 +106,7 @@ export default function OtpProviderForm({ initial, onSubmit, onCancel, submittin
                 />
 
                 <Stack direction="row" spacing={1}>
-                    <Button type="submit" variant="contained" disabled={submitting}>
+                    <Button type="submit" variant="contained" disabled={submitting || !deliveryTypeOptions.length}>
                         {submitting ? 'Saving...' : (initial ? 'Update' : 'Create')}
                     </Button>
                     {initial && (

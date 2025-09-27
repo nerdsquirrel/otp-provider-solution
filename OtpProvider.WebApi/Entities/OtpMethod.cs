@@ -2,7 +2,9 @@
 {
     public enum OtpMethod
     {
-        Sms,
-        Email
+        SMS,
+        Email,
+        WhatsApp,
+        PushNotification
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OtpProvider.WebApi.Data;
 using OtpProvider.WebApi.DTO;
+using OtpProvider.WebApi.Entities;
 
 namespace WebApi.Practice.Controllers
 {
@@ -14,6 +15,20 @@ namespace WebApi.Practice.Controllers
         public OtpProvidersController(ApplicationDbContext db)
         {
             _db = db;
+        }
+
+        // Added: delivery type option record
+        public record DeliveryTypeOption(string Value, string Label);
+
+        // NEW: GET api/otpproviders/delivery-types
+        [HttpGet("delivery-types")]
+        public ActionResult<IEnumerable<DeliveryTypeOption>> GetDeliveryTypes()
+        {
+            // Expose all enum names (string values because JsonStringEnumConverter is configured)
+            var values = Enum.GetNames(typeof(OtpMethod))
+                .Select(v => new DeliveryTypeOption(v, v))
+                .ToList();
+            return Ok(values);
         }
 
         // GET: api/otpproviders?onlyActive=true

@@ -18,8 +18,9 @@ namespace WebApi.Practice.Factory
         {
             return method switch
             {
-                OtpMethod.Sms => _provider.GetRequiredService<SmsOtpSender>(),
+                OtpMethod.SMS => _provider.GetRequiredService<SmsOtpSender>(),
                 OtpMethod.Email => new EmailOtpSender(_emailFactory.GetDefaultEmailService()),
+                OtpMethod.WhatsApp => _provider.GetRequiredService<WhatsAppOtpSender>(),
                 _ => throw new Exception("Invalid OTP method")
             };
         }

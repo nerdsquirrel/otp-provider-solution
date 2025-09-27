@@ -93,9 +93,14 @@ namespace WebApi.Practice.Controllers
             try
             {
                 var sender = _factory.GetSender(request.Method);
-                sender.SendOtp(request.To, rawOtp);
-                sendSucceeded = true;
-                otpRequest.SendStatus = OtpSendStatus.Success;
+                // CHANGED: capture result of provider send instead of assuming success
+                sendSucceeded = await sender.SendOtp(request.To, rawOtp);
+                otpRequest.SendStatus = sendSucceeded ? OtpSendStatus.Success : OtpSendStatus.Failed;
+                if (!sendSucceeded)
+                {
+                    sendError = "Provider reported failure.";
+                    otpRequest.ErrorMessage = sendError;
+                }
             }
             catch (Exception ex)
             {

@@ -11,10 +11,18 @@ namespace OtpProvider.WebApi.OtpSender
             _emailService = emailService;
         }
 
-        public void SendOtp(string destination, string message)
+        public Task<bool> SendOtp(string destination, string message)
         {
-            _emailService.SendEmail(destination, "Your OTP Code", message);
+            try
+            {
+                _emailService.SendEmail(destination, "Your OTP Code", message);
+                return Task.FromResult(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EmailOTP] Send failed: {ex.Message}");
+                return Task.FromResult(false);
+            }
         }
     }
-
 }

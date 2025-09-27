@@ -29,7 +29,7 @@ namespace OtpProvider.WebApi.OtpSender
                       ?? "api-key";
         }
 
-        public void SendOtp(string destination, string message)
+        public async Task<bool> SendOtp(string destination, string message)
         {
             if (string.IsNullOrWhiteSpace(destination))
                 throw new ArgumentException("Destination phone number required.", nameof(destination));
@@ -48,13 +48,13 @@ namespace OtpProvider.WebApi.OtpSender
                 request.Headers.Accept.Clear();
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                using var response = _httpClient.Send(request);
-                var contentString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                using var response = await _httpClient.SendAsync(request);
+                var contentString = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
                     Console.WriteLine($"[SMS] HTTP {(int)response.StatusCode} failure. Body: {contentString}");
-                    return;
+                    return false;
                 }
 
                 SmsSendResponse? smsResp = null;
@@ -70,25 +70,28 @@ namespace OtpProvider.WebApi.OtpSender
                 if (smsResp is null)
                 {
                     Console.WriteLine("[SMS] Null/invalid response object.");
-                    return;
+                    return false;
                 }
 
                 if (smsResp.IsSuccess)
                 {
                     Console.WriteLine($"[SMS] Success: {smsResp.Msg} (Balance: {smsResp.Data?.Balance ?? "N/A"})");
+                    return true;
                 }
-                else
-                {
-                    Console.WriteLine($"[SMS] Failed (error={smsResp.Error}): {smsResp.Msg}");
-                }
+
+                Console.WriteLine($"[SMS] Failed (error={smsResp.Error}): {smsResp.Msg}");
+                return false;
             }
             catch (TaskCanceledException)
             {
                 Console.WriteLine("[SMS] Request timed out.");
+                return false;
             }
             catch (Exception ex)
             {
+                // Unexpected configuration/network issue -> log and return false
                 Console.WriteLine($"[SMS] Unexpected error: {ex.Message}");
+                return false;
             }
         }
     }

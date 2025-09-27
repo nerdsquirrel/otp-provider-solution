@@ -12,7 +12,8 @@ import {
     getOtpProviders,
     createOtpProvider,
     updateOtpProvider,
-    deleteOtpProvider
+    deleteOtpProvider,
+    getDeliveryTypes
 } from '../api/otpProvidersApi';
 import OtpProviderForm from '../components/OtpProviderForm';
 import { useNavigate } from 'react-router-dom';
@@ -21,12 +22,14 @@ export default function OtpProvidersPage() {
     const navigate = useNavigate();
 
     const [providers, setProviders] = useState([]);
+    const [deliveryTypes, setDeliveryTypes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingTypes, setLoadingTypes] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [editItem, setEditItem] = useState(null);
 
-    const load = useCallback(async () => {
+    const loadProviders = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
@@ -39,15 +42,28 @@ export default function OtpProvidersPage() {
         }
     }, []);
 
+    const loadDeliveryTypes = useCallback(async () => {
+        setLoadingTypes(true);
+        try {
+            const types = await getDeliveryTypes();
+            setDeliveryTypes(types);
+        } catch (e) {
+            setError(prev => prev || e?.response?.data || e.message || 'Failed loading delivery types');
+        } finally {
+            setLoadingTypes(false);
+        }
+    }, []);
+
     useEffect(() => {
-        load();
-    }, [navigate, load]);
+        loadProviders();
+        loadDeliveryTypes();
+    }, [navigate, loadProviders, loadDeliveryTypes]);
 
     async function handleCreate(values) {
         setSaving(true); setError('');
         try {
             await createOtpProvider(values);
-            await load();
+            await loadProviders();
         } catch (e) {
             setError(e?.response?.data || e.message || 'Create failed');
         } finally { setSaving(false); }
@@ -59,7 +75,7 @@ export default function OtpProvidersPage() {
         try {
             await updateOtpProvider(editItem.id, values);
             setEditItem(null);
-            await load();
+            await loadProviders();
         } catch (e) {
             setError(e?.response?.data || e.message || 'Update failed');
         } finally { setSaving(false); }
@@ -70,7 +86,7 @@ export default function OtpProvidersPage() {
         setError('');
         try {
             await deleteOtpProvider(id);
-            await load();
+            await loadProviders();
         } catch (e) {
             setError(e?.response?.data || e.message || 'Delete failed');
         }
@@ -85,7 +101,7 @@ export default function OtpProvidersPage() {
                         <Chip label="Dashboard" onClick={() => navigate('/dashboard')} />
                     </Tooltip>
                     <Tooltip title="Refresh">
-                        <IconButton onClick={load} disabled={loading}>
+                        <IconButton onClick={() => { loadProviders(); loadDeliveryTypes(); }} disabled={loading || loadingTypes}>
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
@@ -108,13 +124,15 @@ export default function OtpProvidersPage() {
                         onSubmit={editItem ? handleUpdate : handleCreate}
                         onCancel={() => setEditItem(null)}
                         submitting={saving}
+                        deliveryTypeOptions={deliveryTypes}
                     />
+                    {loadingTypes && <Typography variant="caption" color="text.secondary">Loading delivery types...</Typography>}
                 </Paper>
 
                 <Paper sx={{ p: 2, flex: 1 }} elevation={4}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                         <Typography variant="subtitle1" fontWeight={600}>Existing Providers</Typography>
-                        {loading && <CircularProgress size={22} />}
+                        {(loading || loadingTypes) && <CircularProgress size={22} />}
                     </Stack>
                     <Divider sx={{ mb: 2 }} />
                     {!loading && providers.length === 0 && (
@@ -143,7 +161,7 @@ export default function OtpProvidersPage() {
                                                 color={p.isActive ? 'success' : 'default'}
                                             />
                                         </TableCell>
-                                        <TableCell>{new Date(p.createdAtUtc).toLocaleString()}</TableCell>
+                                        <TableCell>{new Date(p.createdAtUtc ?? p.createdAt).toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Tooltip title="Edit">
                                                 <IconButton size="small" onClick={() => setEditItem(p)}>

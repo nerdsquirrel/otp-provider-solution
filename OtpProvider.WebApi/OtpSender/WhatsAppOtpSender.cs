@@ -7,42 +7,53 @@
 
     public class WhatsAppOtpSender : IOtpSender
     {
-        private readonly HttpClient _httpClient;
+        private static readonly HttpClient _httpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
         private readonly string _phoneNumberId; // From Meta developer dashboard
         private readonly string _accessToken;   // Permanent access token
 
-        public WhatsAppOtpSender(HttpClient httpClient, string phoneNumberId, string accessToken)
+        public WhatsAppOtpSender()
         {
-            _httpClient = httpClient;
-            _phoneNumberId = phoneNumberId;
-            _accessToken = accessToken;
+            _phoneNumberId = "792479687285815";
+            _accessToken = Environment.GetEnvironmentVariable("Otify");
         }
 
-        public void SendOtp(string destination, string message)
+        public async Task<bool> SendOtp(string destination, string message)
         {
-            var url = $"https://graph.facebook.com/v20.0/{_phoneNumberId}/messages";
+            var url = $"https://graph.facebook.com/v22.0/{_phoneNumberId}/messages";
 
             var payload = new
             {
                 messaging_product = "whatsapp",
-                to = destination,   // recipient phone number in international format, e.g. "88017xxxxxxx"
+                to = destination,
                 type = "text",
                 text = new { body = message }
             };
 
             var json = JsonSerializer.Serialize(payload);
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
-            var response = _httpClient.Send(request);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var errorContent = response.Content.ReadAsStringAsync().Result;
-                throw new Exception($"WhatsApp API error: {response.StatusCode} - {errorContent}");
+                using var response = await _httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                    return true;
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[WhatsAppOTP] API error: {response.StatusCode} - {errorContent}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WhatsAppOTP] Unexpected error: {ex.Message}");
+                return false;
             }
         }
     }
-
 }

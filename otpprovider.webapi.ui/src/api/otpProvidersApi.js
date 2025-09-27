@@ -25,7 +25,6 @@ export async function getOtpProvider(id) {
 
 /**
  * Create a new OTP provider.
- * Payload must match OtpProviderCreateDto on the backend.
  */
 export async function createOtpProvider(payload) {
     const { data } = await http.post('/api/otpproviders', payload);
@@ -33,10 +32,7 @@ export async function createOtpProvider(payload) {
 }
 
 /**
- * Update an existing OTP provider (PUT).
- * Payload must match OtpProviderUpdateDto.
- * @param {number} id
- * @param {object} payload
+ * Update an existing OTP provider.
  */
 export async function updateOtpProvider(id, payload) {
     const { data } = await http.put(`/api/otpproviders/${id}`, payload);
@@ -45,24 +41,25 @@ export async function updateOtpProvider(id, payload) {
 
 /**
  * Delete an OTP provider.
- * By default performs a soft delete (sets IsActive = false).
- * Pass hard=true to perform a hard delete (row removal).
- * @param {number} id
- * @param {Object} [options]
- * @param {boolean} [options.hard=false]
  */
 export async function deleteOtpProvider(id, options = {}) {
     const { hard = false } = options;
     await http.delete(`/api/otpproviders/${id}`, hard ? { params: { hard: true } } : undefined);
 }
 
-/**
- * Convenience helpers if you prefer explicit methods.
- */
 export async function softDeleteOtpProvider(id) {
     return deleteOtpProvider(id, { hard: false });
 }
 
 export async function hardDeleteOtpProvider(id) {
     return deleteOtpProvider(id, { hard: true });
+}
+
+/**
+ * NEW: Fetch delivery type options (enum values) from backend.
+ * Returns [{ value: 'SMS', label: 'SMS' }, ...]
+ */
+export async function getDeliveryTypes() {
+    const { data } = await http.get('/api/otpproviders/delivery-types');
+    return data;
 }

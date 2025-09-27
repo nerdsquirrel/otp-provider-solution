@@ -1,14 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sendOtp } from '../api/otpApi';
+import { getDeliveryTypes } from '../api/otpProvidersApi';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function SendOtpPage() {
-    const [method, setMethod] = useState('Sms');
+    const navigate = useNavigate();
+
+    const [deliveryTypes, setDeliveryTypes] = useState([]); // [{ value, label }]
+    const [loadingTypes, setLoadingTypes] = useState(true);
+    const [method, setMethod] = useState(''); // will be set after fetch
     const [to, setTo] = useState('');
     const [purpose, setPurpose] = useState('');
     const [status, setStatus] = useState({ loading: false, error: '', ok: '' });
     const [result, setResult] = useState(null);
-    const navigate = useNavigate();
+
+    const loadDeliveryTypes = useCallback(async () => {
+        setLoadingTypes(true);
+        try {
+            const types = await getDeliveryTypes();
+            setDeliveryTypes(types);
+            // If current method not in list, or empty, set to first available
+            if (!types.find(t => t.value === method)) {
+                if (types.length) setMethod(types[0].value);
+                else setMethod('');
+            }
+        } catch (e) {
+            setDeliveryTypes([]);
+            setMethod('');
+            setStatus(s => ({
+                ...s,
+                error: s.error || (e?.response?.data || e.message || 'Failed to load delivery types')
+            }));
+        } finally {
+            setLoadingTypes(false);
+        }
+    }, [method]);
+
+    useEffect(() => {
+        loadDeliveryTypes();
+    }, [loadDeliveryTypes]);
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -34,30 +64,40 @@ export default function SendOtpPage() {
         }
     }
 
+    const isSmsLike = method === 'SMS' || method === 'WhatsApp'; // treat WhatsApp similar for label purposes
+    const destinationLabel = isSmsLike ? 'Phone Number' : 'Email Address';
+    const destinationPlaceholder = isSmsLike ? '+15551234567' : 'user@example.com';
+
     return (
         <div style={{ maxWidth: 560, margin: '40px auto', padding: 24, border: '1px solid #ddd', borderRadius: 8 }}>
             <h2 style={{ marginTop: 0 }}>Send OTP</h2>
+
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <label>
                     Method
                     <select
                         value={method}
+                        disabled={loadingTypes || !deliveryTypes.length}
                         onChange={e => setMethod(e.target.value)}
-                        style={{ display: 'block', marginTop: 4 }}
+                        style={{ display: 'block', marginTop: 4, minHeight: 32 }}
                     >
-                        <option value="Sms">SMS</option>
-                        <option value="Email">Email</option>
+                        {loadingTypes && <option value="">Loading...</option>}
+                        {!loadingTypes && deliveryTypes.length === 0 && <option value="">No methods available</option>}
+                        {!loadingTypes && deliveryTypes.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
                     </select>
                 </label>
 
                 <label>
-                    {method === 'Sms' ? 'Phone Number' : 'Email Address'}
+                    {destinationLabel}
                     <input
                         type="text"
                         value={to}
                         onChange={e => setTo(e.target.value)}
-                        placeholder={method === 'Sms' ? '+15551234567' : 'user@example.com'}
+                        placeholder={destinationPlaceholder}
                         style={{ width: '100%', marginTop: 4 }}
+                        disabled={!method}
                     />
                 </label>
 
@@ -73,12 +113,13 @@ export default function SendOtpPage() {
                 </label>
 
                 <div style={{ display: 'flex', gap: 12 }}>
-                    <button disabled={status.loading} type="submit">
+                    <button disabled={status.loading || !method} type="submit">
                         {status.loading ? 'Sending...' : 'Send OTP'}
                     </button>
                     <button type="button" onClick={() => navigate('/dashboard')}>Back</button>
                 </div>
 
+                {loadingTypes && <div style={{ fontSize: 12, color: '#555' }}>Loading delivery types...</div>}
                 {status.error && <div style={{ color: 'red' }}>{status.error}</div>}
                 {status.ok && <div style={{ color: 'green' }}>{status.ok}</div>}
             </form>
