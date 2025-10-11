@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Blue shield with keyhole -->
+  <g filter="url(#glow)">
+    <path fill="#1E90FF" d="M60 20 L100 30 L100 70 Q80 100 60 70 L60 20 Z"/>
+    <circle cx="80" cy="55" r="6" fill="#fff"/>
+    <rect x="78" y="55" width="4" height="12" fill="#fff"/>
+  </g>
+  <!-- Text 'Otpfy' -->
+  <text x="130" y="72" font-family="Montserrat, Poppins, sans-serif" font-size="48" font-weight="700" fill="#0A2A5E" filter="url(#glow)">
+    Otpfy
+  </text>
+</svg>

@@ -17,7 +17,7 @@
         public WhatsAppOtpSender()
         {
             _phoneNumberId = "792479687285815";
-            _accessToken = Environment.GetEnvironmentVariable("Otify");
+            _accessToken = Environment.GetEnvironmentVariable("otpfy") ?? string.Empty;
         }
 
         public async Task<bool> SendOtp(string destination, string message)
