@@ -112,6 +112,13 @@ export default function DashboardPage() {
                     accent="#9333ea"
                     icon="🧩"
                 />
+                <ActionCard
+                    to="/user-preferences"
+                    title="User Preferences"
+                    description="Configure OTP policy: length, expiry, channels."
+                    accent="#0d9488"
+                    icon="⚙️"
+                />
             </section>
 
             {loading && <div style={{ padding: 16 }}>Loading dashboard...</div>}

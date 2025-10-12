@@ -251,6 +251,50 @@ namespace OtpProvider.WebApi.Migrations
                     b.ToTable("OtpVerifications");
                 });
 
+            modelBuilder.Entity("OtpProvider.WebApi.Entities.UserOtpPreference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CharacterSet")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExpirationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxVerificationAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OtpLength")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredChannel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetryDelaySeconds")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PreferredProviderId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserOtpPreferences");
+                });
+
             modelBuilder.Entity("OtpProvider.WebApi.Entities.ApplicationUserRoles", b =>
                 {
                     b.HasOne("OtpProvider.WebApi.Entities.ApplicationRole", "Role")
@@ -297,6 +341,25 @@ namespace OtpProvider.WebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("OtpRequest");
+                });
+
+            modelBuilder.Entity("OtpProvider.WebApi.Entities.UserOtpPreference", b =>
+                {
+                    b.HasOne("OtpProvider.WebApi.Entities.OtpProvider", "PreferredProvider")
+                        .WithMany()
+                        .HasForeignKey("PreferredProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OtpProvider.WebApi.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PreferredProvider");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OtpProvider.WebApi.Entities.ApplicationRole", b =>

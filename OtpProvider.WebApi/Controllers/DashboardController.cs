@@ -9,7 +9,7 @@ namespace OtpProvider.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    // [Authorize]
     public class DashboardController : ControllerBase
     {
         private readonly ApplicationDbContext _db;

@@ -16,6 +16,8 @@ namespace OtpProvider.WebApi.Data
         public DbSet<OtpRequest> OtpRequests { get; set; }
         public DbSet<OtpVerification> OtpVerifications { get; set; }
 
+        public DbSet<UserOtpPreference> UserOtpPreferences { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -120,6 +122,18 @@ namespace OtpProvider.WebApi.Data
                 entity.HasOne(v => v.OtpRequest)
                       .WithMany(r => r.OtpVerifications)
                       .HasForeignKey(v => v.OtpRequestId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // UserOtpPreference
+            modelBuilder.Entity<UserOtpPreference>(entity =>
+            {
+                entity.HasKey(p => p.Id);
+                entity.Property(p => p.PreferredProviderId)
+                      .IsRequired();
+                entity.HasOne(p => p.User)
+                      .WithMany()
+                      .HasForeignKey(p => p.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }

@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SendOtpPage from './pages/SendOtpPage';
 import OtpProvidersPage from './pages/OtpProvidersPage';
 import VerifyOtpPage from './pages/VerifyOtpPage';
+import UserPreferencesPage from './pages/UserPreferencesPage';
 
 export default function App() {
     return (
@@ -32,6 +33,12 @@ export default function App() {
             <Route path="/otp-providers" element={
                 <ProtectedRoute>
                     <OtpProvidersPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/user-preferences" element={
+                <ProtectedRoute>
+                    <UserPreferencesPage />
                 </ProtectedRoute>
             } />
             <Route path="*" element={<h3 style={{ padding: 24 }}>Not Found</h3>} />
