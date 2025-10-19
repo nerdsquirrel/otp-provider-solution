@@ -6,6 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	<UserSecretsId>otp-provider-gmail-password</UserSecretsId>
   </PropertyGroup>
+  
+  <Target Name="CopyReactBuild" BeforeTargets="PrepareForPublish">
+  <Exec Command="npm run build" WorkingDirectory="..\otpprovider.webapi.ui" />
+  <ItemGroup>
+    <ReactBuildFiles Include="..\otpprovider.webapi.ui\dist\**\*" />
+  </ItemGroup>
+  <Copy SourceFiles="@(ReactBuildFiles)" DestinationFolder="$(ProjectDir)wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" />
+</Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />

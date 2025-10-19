@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using OtpProvider.WebApi.Config;
 using OtpProvider.WebApi.Data;
 using OtpProvider.WebApi.DTO;
+using OtpProvider.WebApi.Infrastructure;
 using OtpProvider.WebApi.OtpSender;
 using OtpProvider.WebApi.Services;
 using System.Text;
@@ -104,5 +105,7 @@ app.UseDefaultFiles(defaultFileOptions);
 
 app.UseAuthorization();
 app.MapControllers();
+
+app.ApplyMigrations();
 
 app.Run();
